@@ -13,12 +13,12 @@ const links = [
   { name: 'Home', href: '/', icon: HomeIcon },
   {
     name: 'Files',
-    href: '/',
+    href: '/files',
     icon: DocumentDuplicateIcon,
   },
   {
     name: 'Podcast',
-    href: '/',
+    href: '/podcasts',
     icon: MusicalNoteIcon,
   }
 ];
