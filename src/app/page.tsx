@@ -1,7 +1,9 @@
-export default function Home() {
+import MyDropzone from "@/components/dashboard/DragnDrop";
+
+export default async function Home() {
   return (
     <section>
-      <h1 className="text-4xl text-center">Home Page</h1>
+      <MyDropzone />
     </section>
   );
 }
