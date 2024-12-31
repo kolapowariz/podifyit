@@ -1,9 +1,10 @@
 'use client';
-import { getDocument } from 'pdfjs-dist';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 
+GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.min.js';
 
 export default function MyDropzone() {
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
