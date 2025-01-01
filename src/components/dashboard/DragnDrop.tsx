@@ -4,10 +4,20 @@ import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 
-GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.min.js';
+GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
+
 
 export default function MyDropzone() {
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+
+    try {
+      GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.worker.min.js';
+    } catch (error) {
+      console.error('Failed to set worker source:', error);
+    }
+
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
       const arrayBuffer = await file.arrayBuffer();
@@ -79,3 +89,5 @@ export default function MyDropzone() {
 //     </div>
 //   )
 // }
+
+
