@@ -1,22 +1,15 @@
 'use client';
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import { getDocument, GlobalWorkerOptions,  } from 'pdfjs-dist';
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 
-GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
-
+GlobalWorkerOptions.workerSrc = 'https://mozilla.github.io/pdf.mjs/build/pdf.worker.mjs';
 
 
 export default function MyDropzone() {
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-
-    try {
-      GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.worker.min.js';
-    } catch (error) {
-      console.error('Failed to set worker source:', error);
-    }
 
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
@@ -52,6 +45,8 @@ export default function MyDropzone() {
     </div>
   )
 }
+
+
 
 
 // export function Dropzone() {
