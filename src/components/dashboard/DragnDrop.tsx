@@ -7,10 +7,12 @@ import { loadPDF } from '../extracter';
 
 export default function MyDropzone() {
   const [text, setText] = useState<string>()
+  const [loading, setLoading] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
 
     if (acceptedFiles.length > 0) {
+      setLoading(true)
 
       const file = acceptedFiles[0];
       const arrayBuffer = await file.arrayBuffer();
@@ -38,6 +40,7 @@ export default function MyDropzone() {
 
         console.log('Extracted text:', extractedText);
         setText(extractedText);
+        setLoading(false)
 
       } catch (error) {
         console.error('Error loading PDF file:', error);
@@ -46,6 +49,7 @@ export default function MyDropzone() {
   }, [])
   const { getRootProps, getInputProps } = useDropzone({ onDrop })
 
+
   return (
     <>
       <div {...getRootProps()} className="w-full h-full flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-md mt-10 cursor-pointer">
@@ -53,6 +57,8 @@ export default function MyDropzone() {
         <input {...getInputProps()} />
         <p className='py-20 text-center'>Drag & drop a PDF file here, or click to select one</p>
       </div>
+
+      {loading && <div className='text-center text-2xl mt-10'>Extracting Text from pdf</div>}
 
       {text && <div className='text-center p-4 rounded-md mt-10'>
         <h1 className='text-xl font-bold'>Extracted text</h1>
