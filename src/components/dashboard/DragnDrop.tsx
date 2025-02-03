@@ -6,7 +6,8 @@ import { loadPDF } from '../extracter';
 
 
 export default function MyDropzone() {
-  const [text, setText] = useState<string>()
+  const [text, setText] = useState<string>('')
+  // const [result, setResult] = useState<string>('')
   const [loading, setLoading] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -40,13 +41,32 @@ export default function MyDropzone() {
 
         console.log('Extracted text:', extractedText);
         setText(extractedText);
-        setLoading(false)
+
+        // const response = await fetch('/api/tts', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify({ text: extractedText }),
+        // })
+
+        // if (!response.ok) {
+        //   console.error('Failed to fetch TTS API:', response.statusText);
+        //   return;
+        // }
+
+        // const data = await response.json();
+        // console.log('TTS API response:', data.result);
+        // setResult(data.result);
 
       } catch (error) {
         console.error('Error loading PDF file:', error);
+      } finally {
+        setLoading(false)
       }
     }
   }, [])
+
   const { getRootProps, getInputProps } = useDropzone({ onDrop })
 
 
@@ -58,12 +78,19 @@ export default function MyDropzone() {
         <p className='py-20 text-center'>Drag & drop a PDF file here, or click to select one</p>
       </div>
 
-      {loading && <div className='text-center text-2xl mt-10'>Extracting Text from pdf</div>}
+      {loading && <div className='text-center text-2xl mt-10'>Processing...</div>}
 
       {text && <div className='text-center p-4 rounded-md mt-10'>
         <h1 className='text-xl font-bold'>Extracted text</h1>
         <p className='text-justify'>{text}</p>
       </div>}
+
+      {/* {result && (
+        <div className="text-center p-4 rounded-md mt-10">
+        <h1 className="text-xl font-bold">Generated Result</h1>
+        <p className="text-justify">{result}</p>
+      </div>
+      )} */}
 
     </>
   )
