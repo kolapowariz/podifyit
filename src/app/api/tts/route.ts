@@ -1,3 +1,7 @@
+export const config = {
+  runtime: "edge",
+};
+
 import { pipeline, TextStreamer } from "@huggingface/transformers";
 import type { Pipeline } from "@huggingface/transformers";
 
