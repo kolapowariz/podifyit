@@ -7,7 +7,7 @@ import { loadPDF } from '../extracter';
 
 export default function MyDropzone() {
   const [text, setText] = useState<string>('')
-  // const [result, setResult] = useState<string>('')
+  // const [generatedText, setGeneratedText] = useState<string>('')
   const [loading, setLoading] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -57,7 +57,7 @@ export default function MyDropzone() {
 
         // const data = await response.json();
         // console.log('TTS API response:', data.result);
-        // setResult(data.result);
+        // setGeneratedText(data.result);
 
       } catch (error) {
         console.error('Error loading PDF file:', error);
@@ -85,10 +85,10 @@ export default function MyDropzone() {
         <p className='text-justify'>{text}</p>
       </div>}
 
-      {/* {result && (
+      {/* {generatedText && (
         <div className="text-center p-4 rounded-md mt-10">
         <h1 className="text-xl font-bold">Generated Result</h1>
-        <p className="text-justify">{result}</p>
+        <p className="text-justify">{generatedText}</p>
       </div>
       )} */}
 
