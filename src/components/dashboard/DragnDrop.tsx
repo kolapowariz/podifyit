@@ -7,7 +7,6 @@ import { loadPDF } from '../extracter';
 
 export default function MyDropzone() {
   const [text, setText] = useState<string>('')
-  // const [generatedText, setGeneratedText] = useState<string>('')
   const [loading, setLoading] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -42,23 +41,6 @@ export default function MyDropzone() {
         console.log('Extracted text:', extractedText);
         setText(extractedText);
 
-        // const response = await fetch('/api/tts', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({ text: extractedText }),
-        // })
-
-        // if (!response.ok) {
-        //   console.error('Failed to fetch TTS API:', response.statusText);
-        //   return;
-        // }
-
-        // const data = await response.json();
-        // console.log('TTS API response:', data.result);
-        // setGeneratedText(data.result);
-
       } catch (error) {
         console.error('Error loading PDF file:', error);
       } finally {
@@ -85,12 +67,6 @@ export default function MyDropzone() {
         <p className='text-justify'>{text}</p>
       </div>}
 
-      {/* {generatedText && (
-        <div className="text-center p-4 rounded-md mt-10">
-        <h1 className="text-xl font-bold">Generated Result</h1>
-        <p className="text-justify">{generatedText}</p>
-      </div>
-      )} */}
 
     </>
   )
