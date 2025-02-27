@@ -1,5 +1,5 @@
 'use client';
-import { query } from '@/lib/action';
+import { summary } from '@/lib/action';
 import { TextItem } from 'pdfjs-dist/types/src/display/api';
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -42,13 +42,11 @@ export default function MyDropzone() {
           })
         }
 
-        console.log('Extracted text:', extractedText);
-        
-        if(extractedText === '') {
+        if (extractedText === '') {
           console.log('No word extracted from pdf')
           return;
         }
-        
+
         console.log('Extracted text:', extractedText);
         setText(extractedText);
 
@@ -67,23 +65,20 @@ export default function MyDropzone() {
 
       const maxLength = 1024;
       const truncatedText = text.length > maxLength ? text.substring(0, maxLength) : text
-  
+
       try {
-        const response = await query({ "inputs": truncatedText });
-  
-        // Log the full response before processing it
-        console.log("API Raw Response:", response);
-  
+        const response = await summary({ "inputs": truncatedText });
+
         if (!response || typeof response !== "object") {
           throw new Error("Unexpected API response format");
         }
-  
+
         const summaryText = response?.summary_text || (Array.isArray(response) && response[0]?.summary_text);
-  
+
         if (!summaryText) {
           throw new Error("Invalid response from API");
         }
-  
+
         console.log("Summary:", summaryText);
         setSummarizedText(summaryText);
       } catch (error) {
@@ -91,10 +86,10 @@ export default function MyDropzone() {
         setSummarizedText("Failed to generate summary.");
       }
     }
-  
+
     fetchSummary();
   }, [text]);
-  
+
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop })
 
