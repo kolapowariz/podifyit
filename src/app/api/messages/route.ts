@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 const messages: string[] = [];
 
+// write different api and use react-query and SWR for client side fetching
+
 export async function GET() {
   console.log(messages)
   return NextResponse.json({ messages })
