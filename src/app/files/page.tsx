@@ -1,48 +1,21 @@
-'use client'
-
-import { useEffect, useState } from "react";
-
-export default function Files() {
-  const [messages, setMessages] = useState<string[]>([])
-  const [newMessage, setNewMessage] = useState('')
+import SendMessageForm from "@/components/dashboard/sendMessageForm";
 
 
-  useEffect(() => {
-    async function fetchMessages() {
-      try {
-        const res = await fetch('/api/messages');
-        if (!res.ok) throw new Error('Failed to fetch messages');
-        const data = await res.json();
-        console.log(data)
-        console.log(data.messages)
-        setMessages(data.messages)
-      } catch (error) {
-        console.log(error)
-      }
-    }
-    fetchMessages()
-  }, []);
+async function fetchMessages() {
+  const res = await fetch('http://localhost:3000/api/messages', {
+    cache: 'no-store'
+  })
 
-  async function sendMessage() {
-    if (!newMessage.trim()) return;
+  if (!res.ok) throw new Error('Failed to fetch messages');
 
-    try {
-      const res = await fetch('/api/messages', {
-        method: "POST",
-        headers: { "Content-Type": 'application/json' },
-        body: JSON.stringify({ message: newMessage }),
-      })
+  const data = await res.json()
+  return data.messages;
+}
 
-      if (!res.ok) throw new Error('Failed to send message');
 
-      const data = await res.json()
-      setMessages(data.messages);
-      setNewMessage('')
+export default async function Files() {
+  const messages = await fetchMessages()
 
-    } catch (error) {
-      console.log(error)
-    }
-  }
 
 
   return (
@@ -51,26 +24,13 @@ export default function Files() {
       <h1 className="text-xl font-bold mb-4">Messages API test</h1>
 
       <ul className="mb-4">
-        {messages.map((msg, index) => (
+        {messages.map((msg: string, index: number) => (
           <li key={index} className="border p-2 mb-2 rounded">{msg}</li>
         ))}
       </ul>
 
 
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type a message..."
-          className="border p-2 flex-1 rounded"
-        />
-        <button onClick={sendMessage} className="bg-blue-500 text-white p-2 rounded"
-        >
-          Send
-        </button>
-      </div>
-
+      <SendMessageForm />
     </div>
   )
 }
