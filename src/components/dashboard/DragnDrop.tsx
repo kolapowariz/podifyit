@@ -1,7 +1,6 @@
 'use client';
-import { summary } from '@/lib/action';
 import { TextItem } from 'pdfjs-dist/types/src/display/api';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { loadPDF } from '../extracter';
 
@@ -9,20 +8,20 @@ import { loadPDF } from '../extracter';
 export default function MyDropzone() {
   const [text, setText] = useState<string>('')
   const [loading, setLoading] = useState(false);
-  const [summarizedText, setSummarizedText] = useState<string>('')
-
+  const [responseText, setResponseText] = useState<string>('')
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
 
     if (acceptedFiles.length > 0) {
       setLoading(true)
-      setSummarizedText('');
+      setText('')
 
       const file = acceptedFiles[0];
       const arrayBuffer = await file.arrayBuffer();
 
       if (file.type !== 'application/pdf') {
         console.error('Uploaded file is not a valid PDF');
+        setLoading(false)
         return;
       }
 
@@ -42,13 +41,14 @@ export default function MyDropzone() {
           })
         }
 
-        if (extractedText === '') {
+        if (extractedText === '' || !extractedText) {
           console.log('No word extracted from pdf')
+          setLoading(false)
           return;
         }
 
-        console.log('Extracted text:', extractedText);
         setText(extractedText);
+        await generateResponse(extractedText);
 
       } catch (error) {
         console.error('Error loading PDF file:', error);
@@ -59,36 +59,29 @@ export default function MyDropzone() {
   }, [])
 
 
-  useEffect(() => {
-    async function fetchSummary() {
-      if (!text) return;
+  async function generateResponse(text: string) {
+    setResponseText("");
+    setLoading(true);
 
-      const maxLength = 1024;
-      const truncatedText = text.length > maxLength ? text.substring(0, maxLength) : text
+    const res = await fetch("/api/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
 
-      try {
-        const response = await summary({ "inputs": truncatedText });
+    if (!res.body) return;
 
-        if (!response || typeof response !== "object") {
-          throw new Error("Unexpected API response format");
-        }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
 
-        const summaryText = response?.summary_text || (Array.isArray(response) && response[0]?.summary_text);
-
-        if (!summaryText) {
-          throw new Error("Invalid response from API");
-        }
-
-        console.log("Summary:", summaryText);
-        setSummarizedText(summaryText);
-      } catch (error) {
-        console.error("Error fetching summary:", error);
-        setSummarizedText("Failed to generate summary.");
-      }
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      setResponseText((prev) => prev + decoder.decode(value));
     }
 
-    fetchSummary();
-  }, [text]);
+    setLoading(false);
+  }
 
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop })
@@ -108,13 +101,10 @@ export default function MyDropzone() {
         <p className='text-justify'>{text}</p>
       </div>}
 
-
-      {summarizedText && <div className='text-center p-4 rounded-md mt-10'>
-        <h1 className='text-xl font-bold'>Summarized text</h1>
-        <p className='text-justify'>{summarizedText || 'No summary available'}</p>
-      </div>
-      }
-
+      {responseText && <div className='text-center p-4 rounded-md mt-10'>
+        <h1 className='text-xl font-bold'>AI Response</h1>
+        <p className='text-justify'>{responseText}</p>
+      </div>}
 
     </>
   )
