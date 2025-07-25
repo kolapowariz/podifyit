@@ -1,27 +1,24 @@
-'use client';
-import { TextItem } from 'pdfjs-dist/types/src/display/api';
-import { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { loadPDF } from '../extracter';
-
+"use client";
+import { TextItem } from "pdfjs-dist/types/src/display/api";
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { loadPDF } from "../extracter";
 
 export default function MyDropzone() {
-  const [text, setText] = useState<string>('')
+  const [text, setText] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [responseText, setResponseText] = useState<string>('')
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-
     if (acceptedFiles.length > 0) {
-      setLoading(true)
-      setText('')
+      setLoading(true);
+      setText("");
 
       const file = acceptedFiles[0];
       const arrayBuffer = await file.arrayBuffer();
 
-      if (file.type !== 'application/pdf') {
-        console.error('Uploaded file is not a valid PDF');
-        setLoading(false)
+      if (file.type !== "application/pdf") {
+        console.error("Uploaded file is not a valid PDF");
+        setLoading(false);
         return;
       }
 
@@ -29,7 +26,7 @@ export default function MyDropzone() {
         const pdf = await loadPDF(arrayBuffer);
 
         const numPages = pdf.numPages;
-        let extractedText = '';
+        let extractedText = "";
 
         for (let i = 1; i <= numPages; i++) {
           const page = await pdf.getPage(i);
@@ -37,75 +34,49 @@ export default function MyDropzone() {
 
           textContent.items.forEach((item) => {
             const textItem = item as TextItem;
-            extractedText += textItem.str + ' ';
-          })
+            extractedText += textItem.str + " ";
+          });
         }
 
-        if (extractedText === '' || !extractedText) {
-          console.log('No word extracted from pdf')
-          setLoading(false)
+        if (extractedText === "" || !extractedText) {
+          console.log("No word extracted from pdf");
+          setLoading(false);
           return;
         }
 
         setText(extractedText);
-        await generateResponse(extractedText);
-
       } catch (error) {
-        console.error('Error loading PDF file:', error);
+        console.error("Error loading PDF file:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }, [])
+  }, []);
 
-
-  async function generateResponse(text: string) {
-    setResponseText("");
-    setLoading(true);
-
-    const res = await fetch("/api/stream", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-
-    if (!res.body) return;
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      setResponseText((prev) => prev + decoder.decode(value));
-    }
-
-    setLoading(false);
-  }
-
-
-  const { getRootProps, getInputProps } = useDropzone({ onDrop })
+  const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
     <>
-      <div {...getRootProps()} className="w-full h-full flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-md mt-10 cursor-pointer">
-
+      <div
+        {...getRootProps()}
+        className="w-full h-full flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-md mt-10 cursor-pointer"
+      >
         <input {...getInputProps()} />
-        <p className='py-20 text-center'>Drag & drop a PDF file here, or click to select one</p>
+        <p className="py-20 text-center">
+          Drag & drop a PDF file here, or click to select one
+        </p>
       </div>
 
-      {loading && <div className='text-center text-2xl mt-10'>Processing...</div>}
+      {loading && (
+        <div className="text-center text-2xl mt-10">Processing...</div>
+      )}
 
-      {text && <div className='text-center p-4 rounded-md mt-10'>
-        <h1 className='text-xl font-bold'>Extracted text</h1>
-        <p className='text-justify'>{text}</p>
-      </div>}
-
-      {responseText && <div className='text-center p-4 rounded-md mt-10'>
-        <h1 className='text-xl font-bold'>AI Response</h1>
-        <p className='text-justify'>{responseText}</p>
-      </div>}
-
+      {text && (
+        <div className="text-center p-4 rounded-md mt-10">
+          <h1 className="text-xl font-bold">Extracted text</h1>
+          <p className="text-justify">{text}</p>
+        </div>
+      )}
     </>
-  )
+  );
 }
