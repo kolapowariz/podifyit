@@ -4,9 +4,11 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { loadPDF } from "../extracter";
 
-export default function MyDropzone() {
+export default function DropZone() {
   const [text, setText] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [audioURL, setAudioURL] = useState<string>();
+  const [pdfError, setPdfError] = useState<string>("");
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -17,10 +19,14 @@ export default function MyDropzone() {
       const arrayBuffer = await file.arrayBuffer();
 
       if (file.type !== "application/pdf") {
-        console.error("Uploaded file is not a valid PDF");
+        setPdfError(
+          "Uploaded file is not a valid PDF. Please upload a valid PDF file.",
+        );
         setLoading(false);
         return;
       }
+
+      setPdfError("");
 
       try {
         const pdf = await loadPDF(arrayBuffer);
@@ -39,12 +45,29 @@ export default function MyDropzone() {
         }
 
         if (extractedText === "" || !extractedText) {
-          console.log("No word extracted from pdf");
+          setPdfError("No text found in the PDF file.");
           setLoading(false);
           return;
         }
 
+        setPdfError("");
+
         setText(extractedText);
+        const backendUrl =
+          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+        const res = await fetch(`${backendUrl}/podcast`, {
+          method: "POST",
+          body: JSON.stringify({ text: extractedText }),
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Backend returned ${res.status}`);
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        setAudioURL(url);
       } catch (error) {
         console.error("Error loading PDF file:", error);
       } finally {
@@ -71,11 +94,21 @@ export default function MyDropzone() {
         <div className="text-center text-2xl mt-10">Processing...</div>
       )}
 
+      {pdfError && (
+        <div className="text-center text-red-500 mt-14 text-lg">{pdfError}</div>
+      )}
+
       {text && (
         <div className="text-center p-4 rounded-md mt-10">
           <h1 className="text-xl font-bold">Extracted text</h1>
           <p className="text-justify">{text}</p>
         </div>
+      )}
+
+      {audioURL && (
+        <audio controls className="w-full mt-6" src={audioURL}>
+          Your browser does not support the <code>audio</code> element.
+        </audio>
       )}
     </>
   );
