@@ -1,3 +1,5 @@
+# FFMPEG must be installed and available in the system PATH for this code to work. You can download it from https://ffmpeg.org/download.html and follow the installation instructions for your operating system.
+
 import os
 import subprocess
 import tempfile
@@ -10,6 +12,7 @@ from pydantic import BaseModel
 
 import requests
 from dotenv import load_dotenv
+from elevenlabs.client import ElevenLabs
 
 load_dotenv()
 
@@ -25,10 +28,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-HF_API_KEY = os.getenv("HF_API_KEY")
+
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
-if not HF_API_KEY or not ELEVENLABS_API_KEY:
-    raise RuntimeError("HF_API_KEY and ELEVENLABS_API_KEY must be set in the environment")
+
+elevenlabs = ElevenLabs(
+    api_key=ELEVENLABS_API_KEY,
+)
+if not ELEVENLABS_API_KEY:
+    raise RuntimeError("ELEVENLABS_API_KEY must be set in the environment")
 
 
 class PodcastRequest(BaseModel):
@@ -75,77 +82,123 @@ Host A: That's all for today. Stay tuned for more episodes!"""
     return script
 
 
+
+def generate_audio_bytes(text: str, voice_id: str) -> bytes:
+    audio_stream = elevenlabs.text_to_speech.convert(
+        text=text,
+        voice_id=voice_id,
+        model_id="eleven_v3",
+        output_format="mp3_44100_128",
+        voice_settings={
+            "stability": 0.35,
+            "similarity_boost": 0.85,
+            "style": 0.6,
+            "use_speaker_boost": True
+        }
+    )
+
+    audio_bytes = b"".join(audio_stream)
+    return audio_bytes
+
 def _synthesize_audio(script: str) -> bytes:
-    chunks = _chunk_text(script, max_len=2500)  # ElevenLabs has limits, adjust as needed
-    print(f"Generating audio for {len(chunks)} chunks")
+    voice_ids = {
+        "Host A": "JBFqnCBsd6RMkjVDRZzb",  # George
+        "Host B": "EXAVITQu4vr4xnSDxMaL",  # Bella
+    }
+
     with tempfile.TemporaryDirectory() as tmpdir:
         segment_paths = []
-        for idx, chunk in enumerate(chunks):
-            voice_id = "21m00Tcm4TlvDq8ikWAM" if idx % 2 == 0 else "AZnzlk1XvdvUeBnXmlld"  # Rachel and Domi
-            url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-            headers = {
-                "Accept": "audio/mpeg",
-                "Content-Type": "application/json",
-                "xi-api-key": ELEVENLABS_API_KEY
-            }
-            data = {
-                "text": chunk,
-                "model_id": "eleven_flash_v2_5",
-                "voice_settings": {
-                    "stability": 0.5,
-                    "similarity_boost": 0.5
-                }
-            }
-            print(f"Synthesizing chunk {idx + 1}: {chunk[:50]}...")
-            response = requests.post(url, json=data, headers=headers)
-            print(f"ElevenLabs response status: {response.status_code}")
-            if response.status_code != 200:
-                print(f"ElevenLabs error: {response.text}")
-                raise HTTPException(status_code=500, detail=f"ElevenLabs API Error: {response.status_code} - {response.text}")
-            response.raise_for_status()
 
-            segment_path = f"{tmpdir}/segment_{idx}.mp3"
-            with open(segment_path, "wb") as f:
-                f.write(response.content)
-            segment_paths.append(segment_path)
+        lines = script.split("\n")
 
-        concat_file = f"{tmpdir}/segments.txt"
-        with open(concat_file, "w", encoding="utf-8") as f:
-            for path in segment_paths:
-                f.write(f"file '{path}'\n")
+        for idx, line in enumerate(lines):
+            line = line.strip()
+            if not line:
+                continue
 
-        out_path = f"{tmpdir}/podcast.mp3"
-        try:
+            if line.startswith("Host A:"):
+                speaker = "Host A"
+                text = line.replace("Host A:", "").strip()
+            elif line.startswith("Host B:"):
+                speaker = "Host B"
+                text = line.replace("Host B:", "").strip()
+            else:
+                continue
+
+            if not text:
+                continue
+
+            print(f"[{idx}] {speaker}: {text[:60]}...")
+
+            try:
+                audio_bytes = generate_audio_bytes(text, voice_ids[speaker])
+            except Exception as e:
+                raise HTTPException(status_code=502, detail=f"ElevenLabs SDK failed: {str(e)}")
+
+            seg_path = f"{tmpdir}/seg_{idx:03d}.mp3"
+            with open(seg_path, "wb") as f:
+                f.write(audio_bytes)
+
+            segment_paths.append(seg_path)
+
+            # 🔥 Add natural pause after each line
+            silence_path = f"{tmpdir}/silence_{idx:03d}.mp3"
             subprocess.run(
                 [
                     "ffmpeg",
-                    "-y",
-                    "-f",
-                    "concat",
-                    "-safe",
-                    "0",
-                    "-i",
-                    concat_file,
-                    "-c",
-                    "copy",
-                    out_path,
+                    "-f", "lavfi",
+                    "-i", "anullsrc=r=44100:cl=mono",
+                    "-t", "0.3",
+                    "-q:a", "9",
+                    "-acodec", "libmp3lame",
+                    silence_path
                 ],
                 check=True,
-                capture_output=True,
+                capture_output=True
             )
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"ffmpeg failed: {e.stderr.decode('utf-8', errors='ignore')}")
 
-        with open(out_path, "rb") as f:
+            segment_paths.append(silence_path)
+
+        if not segment_paths:
+            raise HTTPException(status_code=500, detail="No audio generated")
+
+        # 🔥 Concatenate everything
+        concat_file = f"{tmpdir}/concat.txt"
+        with open(concat_file, "w") as f:
+            for p in segment_paths:
+                f.write(f"file '{p}'\n")
+
+        output_path = f"{tmpdir}/final.mp3"
+
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-f", "concat",
+                "-safe", "0",
+                "-i", concat_file,
+                "-c:a", "libmp3lame",
+                output_path
+            ],
+            check=True,
+            capture_output=True
+        )
+
+        with open(output_path, "rb") as f:
             return f.read()
-
+        
 
 @app.post("/podcast")
 async def create_podcast(body: PodcastRequest):
-    if not body.text or not body.text.strip():
-        raise HTTPException(status_code=400, detail="Text is required")
+    try:
+        if not body.text.strip():
+            raise HTTPException(status_code=400, detail="Text is required")
 
-    script = _build_podcast_script(body.text)
-    audio = _synthesize_audio(script)
+        script = _build_podcast_script(body.text)
+        audio = _synthesize_audio(script)
 
-    return Response(content=audio, media_type="audio/mpeg")
+        return Response(content=audio, media_type="audio/mpeg")
+
+    except Exception as e:
+        print("🔥 BACKEND ERROR:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
