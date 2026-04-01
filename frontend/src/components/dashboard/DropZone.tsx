@@ -4,19 +4,19 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { loadPDF } from "../extracter";
 import { SkeletonCard, SkeletonAudio } from "./Skeletons";
+import { AlertDestructive } from "./AlertDestructive";
 
 export default function DropZone() {
   const [text, setText] = useState<string>("");
   const [extractLoading, setExtractLoading] = useState(false);
   const [generateLoading, setGenerateLoading] = useState(false);
-  // const [loading, setLoading] = useState(false);
   const [audioURL, setAudioURL] = useState<string>();
   const [pdfError, setPdfError] = useState<string>("");
+  const [generateError, setGenerateError] = useState<string>("");
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       setExtractLoading(true);
-      // setLoading(true);
       setText("");
 
       const file = acceptedFiles[0];
@@ -27,7 +27,6 @@ export default function DropZone() {
           "Uploaded file is not a valid PDF. Please upload a valid PDF file.",
         );
         setExtractLoading(false);
-        // setLoading(false);
         return;
       }
 
@@ -52,7 +51,6 @@ export default function DropZone() {
         if (extractedText === "" || !extractedText) {
           setPdfError("No text found in the PDF file.");
           setExtractLoading(false);
-          // setLoading(false);
           return;
         }
 
@@ -73,7 +71,12 @@ export default function DropZone() {
         });
 
         if (!res.ok) {
-          throw new Error(`Backend returned ${res.status}`);
+          // throw new Error(`Backend returned ${res.status}`);
+          const errorData = await res.json();
+          const errorMessage = errorData.error || "An error occurred while generating audio.";
+          setGenerateError(errorMessage);
+          setGenerateLoading(false);
+          return;
         }
 
         const blob = await res.blob();
@@ -84,7 +87,6 @@ export default function DropZone() {
         console.error("Error loading PDF file:", error);
       } finally {
         setExtractLoading(false);
-        // setLoading(false);
       }
     }
   }, []);
@@ -95,7 +97,7 @@ export default function DropZone() {
     <>
       <div
         {...getRootProps()}
-        className="w-full h-full flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-md mt-10 cursor-pointer"
+        className="w-full h-full flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-md mt-5 cursor-pointer"
       >
         <input {...getInputProps()} />
         <p className="py-20 text-center">
@@ -107,19 +109,12 @@ export default function DropZone() {
         <div className="text-center text-red-500 mt-14 text-lg">{pdfError}</div>
       )}
 
-      {/* {text && (
-        <div className="text-center p-4 rounded-md mt-10">
-          <h1 className="text-xl font-bold">Extracted text</h1>
-          <p className="text-justify">{text}</p>
-        </div>
-      )} */}
-
       {extractLoading ? (
         <SkeletonCard />
       ) : (
         text && (
-          <div className="text-center p-4 rounded-md mt-10">
-            <h1 className="text-xl font-bold">Extracted text</h1>
+          <div className="text-center p-4 rounded-md mt-5">
+            <h1 className="text-xl font-bold">PDF Content</h1>
             <p className="text-justify">{text}</p>
           </div>
         )
@@ -136,11 +131,9 @@ export default function DropZone() {
         )
       )}
 
-      {/* {audioURL && (
-        <audio controls className="w-full mt-6" src={audioURL}>
-          Your browser does not support the <code>audio</code> element.
-        </audio>
-      )} */}
+      {generateError && (
+        <AlertDestructive />
+      )}
 
     </>
   );

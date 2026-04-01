@@ -6,10 +6,10 @@ export function SkeletonCard() {
   return (
     <Card className="w-full mt-10">
       <CardHeader>
-        <Skeleton className="h-8 w-2/3 mx-auto" />
+        <Skeleton className="h-10 w-2/3 mx-auto" />
       </CardHeader>
       <CardContent>
-        <Skeleton className="aspect-video w-full" />
+        <Skeleton className="h-96 w-full" />
       </CardContent>
     </Card>
   );
