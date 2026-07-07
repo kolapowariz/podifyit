@@ -1,7 +1,7 @@
 'use client';
 import {
   DocumentDuplicateIcon,
-  HomeIcon, MusicalNoteIcon
+  HomeIcon, MusicalNoteIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import Link from 'next/link';
@@ -10,7 +10,7 @@ import { usePathname } from 'next/navigation';
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
 const links = [
-  { name: 'Home', href: '/', icon: HomeIcon },
+  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   {
     name: 'Files',
     href: '/files',
