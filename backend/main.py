@@ -19,7 +19,10 @@ load_dotenv()
 app = FastAPI()
 
 # Allow requests from the frontend (Next.js dev server)
-ORIGINS = [os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")]
+ORIGINS = [
+    "http://localhost:3000",
+    "https://podifyit.vercel.app/",
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ORIGINS,
@@ -196,13 +199,25 @@ def root():
 async def create_podcast(body: PodcastRequest):
     try:
         if not body.text.strip():
-            raise HTTPException(status_code=400, detail="Text is required")
+            raise HTTPException(
+                status_code=400,
+                detail="Text is required"
+            )
 
         script = _build_podcast_script(body.text)
         audio = _synthesize_audio(script)
 
-        return Response(content=audio, media_type="audio/mpeg")
+        return Response(
+            content=audio,
+            media_type="audio/mpeg"
+        )
+
+    except HTTPException:
+        raise
 
     except Exception as e:
         print("🔥 BACKEND ERROR:", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )

@@ -62,8 +62,7 @@ export default function DropZone() {
 
         setGenerateLoading(true);
 
-        const backendUrl =
-          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
         const res = await fetch(`${backendUrl}/podcast`, {
           method: "POST",
           body: JSON.stringify({ text: extractedText }),
@@ -73,7 +72,10 @@ export default function DropZone() {
         if (!res.ok) {
           // throw new Error(`Backend returned ${res.status}`);
           const errorData = await res.json();
-          const errorMessage = errorData.error || "An error occurred while generating audio.";
+          const errorMessage =
+            errorData.detail ||
+            errorData.error ||
+            "An error occurred while generating audio.";
           setGenerateError(errorMessage);
           setGenerateLoading(false);
           return;
@@ -120,7 +122,6 @@ export default function DropZone() {
         )
       )}
 
-
       {generateLoading ? (
         <SkeletonAudio />
       ) : (
@@ -131,10 +132,7 @@ export default function DropZone() {
         )
       )}
 
-      {generateError && (
-        <AlertDestructive />
-      )}
-
+      {generateError && <AlertDestructive message={generateError} />}
     </>
   );
 }
