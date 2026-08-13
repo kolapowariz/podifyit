@@ -188,6 +188,10 @@ def _synthesize_audio(script: str) -> bytes:
             return f.read()
         
 
+@app.get("/")
+def root():
+    return {"message": "PodifyIt API is running"}
+
 @app.post("/podcast")
 async def create_podcast(body: PodcastRequest):
     try:
