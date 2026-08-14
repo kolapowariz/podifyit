@@ -21,7 +21,7 @@ app = FastAPI()
 # Allow requests from the frontend (Next.js dev server)
 ORIGINS = [
     "http://localhost:3000",
-    "https://podifyit.vercel.app/",
+    "https://podifyit.vercel.app",
 ]
 app.add_middleware(
     CORSMiddleware,
