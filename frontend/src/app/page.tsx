@@ -1,13 +1,13 @@
-// import DropZone from "@/components/dashboard/DropZone";
+import DropZone from "@/components/dashboard/DropZone";
 
-import LandingPage from "@/components/LandingPage";
+// import LandingPage from "@/components/LandingPage";
 
 export default async function Home() {
 
   return (
     <section>
-      <LandingPage />
-      {/* <DropZone /> */}
+      {/* <LandingPage /> */}
+      <DropZone />
     </section>
   );
 }

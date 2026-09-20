@@ -1,4 +1,4 @@
-import SideNav from "@/components/dashboard/SideNav";
+// import SideNav from "@/components/dashboard/SideNav";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 // import "./globals.css";
@@ -30,7 +30,7 @@ export default function RootLayout({
       >
         <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
           <div className="w-full flex-none md:w-64">
-            <SideNav />
+            {/* <SideNav /> */}
           </div>
           <div className="flex-grow md:overflow-y-auto">{children}</div>
         </div>
