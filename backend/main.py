@@ -341,8 +341,10 @@ def generate_audio_bytes(text: str, voice_id: str) -> bytes:
 
 def _synthesize_audio(script: str) -> bytes:
     voice_ids = {
-        "Host A": "JBFqnCBsd6RMkjVDRZzb",
-        "Host B": "EXAVITQu4vr4xnSDxMaL",
+        # "Host A": "JBFqnCBsd6RMkjVDRZzb",
+        "Host A": "CwhRBWXzGAHq8TQ4Fs17",
+        # "Host B": "EXAVITQu4vr4xnSDxMaL",
+        "Host B": "SAz9YHcvj6GT2YYXdXww",
     }
 
     with tempfile.TemporaryDirectory() as tmpdir:

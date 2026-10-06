@@ -15,7 +15,7 @@ const links = [
   //   icon: DocumentDuplicateIcon,
   // },
   {
-    name: "Podcast",
+    name: "Podcast(s)",
     href: "/podcasts",
     icon: MusicalNoteIcon,
   },
