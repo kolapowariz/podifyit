@@ -4,7 +4,7 @@ import { TextItem } from "pdfjs-dist/types/src/display/api";
 import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { loadPDF } from "../extracter";
-import { SkeletonCard } from "./Skeletons";
+// import { SkeletonCard } from "./Skeletons";
 import { AlertDestructive } from "./AlertDestructive";
 
 type GenerationStage =
@@ -243,7 +243,7 @@ export default function DropZone() {
         )}
 
         {/* PDF extraction skeleton */}
-        {extractLoading && <SkeletonCard />}
+        {/*extractLoading && <SkeletonCard /> */}
 
         {/* Extracted PDF text */}
         {/* {!extractLoading && text && (

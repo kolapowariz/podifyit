@@ -291,7 +291,7 @@ DOCUMENT:
         if not script:
             raise HTTPException(
                 status_code=500,
-                detail="AI failed to generate a podcast script."
+                detail="We couldn't create your podcast script. Please try again."
             )
 
         return script
@@ -305,7 +305,7 @@ DOCUMENT:
 
         raise HTTPException(
             status_code=502,
-            detail=f"AI script generation failed: {str(e)}"
+            detail="We couldn't create your podcast script. Please try again later."
         )
 
 
@@ -335,15 +335,13 @@ def generate_audio_bytes(text: str, voice_id: str) -> bytes:
         print("🔥 ELEVENLABS ERROR:", str(e))
         raise HTTPException(
             status_code=502,
-            detail=f"ElevenLabs audio generation failed: {str(e)}",
+            detail="We couldn't generate the podcast voices. Please try again later.",
         )
 
 
 def _synthesize_audio(script: str) -> bytes:
     voice_ids = {
-        # "Host A": "JBFqnCBsd6RMkjVDRZzb",
         "Host A": "CwhRBWXzGAHq8TQ4Fs17",
-        # "Host B": "EXAVITQu4vr4xnSDxMaL",
         "Host B": "SAz9YHcvj6GT2YYXdXww",
     }
 
@@ -387,7 +385,7 @@ def _synthesize_audio(script: str) -> bytes:
             except Exception as e:
                 raise HTTPException(
                     status_code=502,
-                    detail=f"Failed to synthesize {speaker}: {str(e)}",
+                    detail="We couldn't generate the podcast voices. Please try again later.",
                 )
 
             segment_path = os.path.join(
@@ -434,7 +432,7 @@ def _synthesize_audio(script: str) -> bytes:
 
                 raise HTTPException(
                     status_code=500,
-                    detail="FFmpeg failed while creating audio pauses.",
+                    detail="We couldn't process the podcast audio. Please try again.",
                 )
 
             segment_paths.append(silence_path)
@@ -490,7 +488,7 @@ def _synthesize_audio(script: str) -> bytes:
 
             raise HTTPException(
                 status_code=500,
-                detail="FFmpeg failed while combining the audio.",
+                detail="We couldn't finish processing the podcast audio. Please try again.",
             )
 
         with open(output_path, "rb") as f:
@@ -539,5 +537,5 @@ async def create_podcast(body: PodcastRequest):
 
         raise HTTPException(
             status_code=500,
-            detail=str(e),
+            detail="Something went wrong while creating your podcast. Please try again.",
         )
